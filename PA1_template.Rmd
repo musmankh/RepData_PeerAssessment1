@@ -3,18 +3,73 @@
 
 ## Loading and preprocessing the data
 
+```{r loading, echo = TRUE}
+data <-  read.csv("C:/Users/Usman Khan/Desktop/Courseera/Reproducable Research/Assignment 1/activity.csv", sep = ",")
+
+```
 
 
 ## What is mean total number of steps taken per day?
+```{r mean, echo = TRUE}
+
+data1 <- aggregate(steps~ date, data=data, FUN = sum)
+
+library(ggplot2)
+g <- ggplot(data1, aes(x=steps)) + geom_histogram()
+print(g)
+
+list(mean=mean(data1$steps),median=median(data1$steps))
+
+
+```
 
 
 
 ## What is the average daily activity pattern?
 
+```{r fig.width=7, fig.height=6, echo=TRUE}
+
+xt <- aggregate(steps~ interval, data=data, FUN = mean)
+plot(xt$interval, xt$steps, xlab = "5 mints Interval", ylab = "Average steps" , type = "l")
+subset(xt, xt$steps == max(xt$steps))
+```
 
 
 ## Imputing missing values
 
+```{r imputting, echo = TRUE}
+
+table(is.na(data))
+
+data2 <- merge(xt, data, by = "interval", all = TRUE)
+data2$steps.y[is.na(data2$steps.y)] <- data2$steps.x
+data2$steps.x <- NULL
+
+que4 <- aggregate(steps.y~ date, data=data2, FUN = sum)
+library(ggplot2)
+h <- ggplot(que4, aes(x=steps.y)) + geom_histogram()
+print(h)
+
+list(mean=mean(que4$steps.y),median=median(que4$steps.y))
+
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r weekdays, echo = TRUE}
+
+data3 <- transform(data2, date = as.Date(date,format ="%Y-%m-%d"))
+data3$day <- weekdays(data3$date)
+
+for (i in 1:(length(data3$day))) {
+     if  ((data3$day[i] == "Saturday") | (data3$day[i] == "Sunday")) {
+        data3$weekday[i] <- "weekend" } else {
+            data3$weekday[i] <- "weekday"
+}
+}
+que5 <- aggregate(steps.y~ interval + weekday, data=data3, FUN = mean)
+i <- ggplot(que5, aes(interval, steps.y)) + geom_line() + facet_wrap(~weekday, ncol = 1)
+print(i)
+
+```
